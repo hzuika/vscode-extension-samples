@@ -21,11 +21,11 @@ import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
 
-// Create a connection for the server, using Node's IPC as a transport.
-// Also include all preview / proposed LSP features.
+// トランスポートとしてNodeのIPC(プロセス間通信)を使用してサーバーとの接続を確立する．
+// 全ての preview/proposed LSP機能を含める．
 const connection = createConnection(ProposedFeatures.all);
 
-// Create a simple text document manager.
+// シンプルなテキストドキュメントマネージャーを作る．
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
@@ -35,8 +35,8 @@ let hasDiagnosticRelatedInformationCapability = false;
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
 
-	// Does the client support the `workspace/configuration` request?
-	// If not, we fall back using global settings.
+	// クライアントが `workspace/configuration` リクエストをサポートしているか?
+	// そうでなければ， global settings にフォールバックする．
 	hasConfigurationCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.configuration
 	);
@@ -52,7 +52,7 @@ connection.onInitialize((params: InitializeParams) => {
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
+			// サーバーがコード補完に対応していることを，クライアントに伝える．
 			completionProvider: {
 				resolveProvider: true
 			}
@@ -70,7 +70,7 @@ connection.onInitialize((params: InitializeParams) => {
 
 connection.onInitialized(() => {
 	if (hasConfigurationCapability) {
-		// Register for all configuration changes.
+		// 全ての構成の変更を登録する．
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	}
 	if (hasWorkspaceFolderCapability) {
@@ -80,23 +80,23 @@ connection.onInitialized(() => {
 	}
 });
 
-// The example settings
+// 設定例．
 interface ExampleSettings {
 	maxNumberOfProblems: number;
 }
 
-// The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
+// `workspace/configuration` リクエストがサポートされていないときに， global settings を使用する．
+// この例で提供されるクライアントでこのサーバーを使用する場合は，このようなことは起こらない．
+// しかし，他のクライアントでは起こりうることに注意する．
 const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
 let globalSettings: ExampleSettings = defaultSettings;
 
-// Cache the settings of all open documents
+// 開いている全てのドキュメントの設定をキャッシュする．
 const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
-		// Reset all cached document settings
+		// 全てのキャッシュされたドキュメントの設定をリセットする．
 		documentSettings.clear();
 	} else {
 		globalSettings = <ExampleSettings>(
@@ -104,7 +104,7 @@ connection.onDidChangeConfiguration(change => {
 		);
 	}
 
-	// Revalidate all open text documents
+	// 開いている全てのテキストドキュメントを再検証する．
 	documents.all().forEach(validateTextDocument);
 });
 
@@ -123,22 +123,22 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 	return result;
 }
 
-// Only keep settings for open documents
+// 開いているドキュメントの設定のみキープする．
 documents.onDidClose(e => {
 	documentSettings.delete(e.document.uri);
 });
 
-// The content of a text document has changed. This event is emitted
-// when the text document first opened or when its content has changed.
+// テキストドキュメントの内容が変更された．
+// このイベントは，テキストドキュメントが最初に開いた時と，内容が変更されたときに発火する．
 documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	// In this simple example we get the settings for every validate run.
+	// このシンプルな例では，毎回，検証を実行するたびに設定を取得する．
 	const settings = await getDocumentSettings(textDocument.uri);
 
-	// The validator creates diagnostics for all uppercase words length 2 and more
+	// バリデータは，長さが2以上の全ての大文字の単語に対して診断を作成する．
 	const text = textDocument.getText();
 	const pattern = /\b[A-Z]{2,}\b/g;
 	let m: RegExpExecArray | null;
@@ -177,21 +177,20 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		diagnostics.push(diagnostic);
 	}
 
-	// Send the computed diagnostics to VSCode.
+	// 計算された診断をVS Codeに送信する．
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 connection.onDidChangeWatchedFiles(_change => {
-	// Monitored files have change in VSCode
+	// VS Code のファイル変更を監視する．
 	connection.console.log('We received an file change event');
 });
 
-// This handler provides the initial list of the completion items.
+// このハンドラは補完項目の初期リストを提供する．
 connection.onCompletion(
 	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-		// The pass parameter contains the position of the text document in
-		// which code complete got requested. For the example we ignore this
-		// info and always provide the same completion items.
+		// 引数には，コード補完が要求されたテキストドキュメントの位置が含まれる．
+		// 例えば，情報を無視して，常に同じ補完項目を提供する．
 		return [
 			{
 				label: 'TypeScript',
@@ -207,8 +206,8 @@ connection.onCompletion(
 	}
 );
 
-// This handler resolves additional information for the item selected in
-// the completion list.
+//
+// このハンドラは，補完項目の中で選択された項目の追加情報を解決する．
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
 		if (item.data === 1) {
@@ -222,9 +221,9 @@ connection.onCompletionResolve(
 	}
 );
 
-// Make the text document manager listen on the connection
-// for open, change and close text document events
+//
+// テキストドキュメントの open, change, close イベントをリッスンするドキュメントマネージャーを作る．
 documents.listen(connection);
 
-// Listen on the connection
+// 接続をリッスンする．
 connection.listen();

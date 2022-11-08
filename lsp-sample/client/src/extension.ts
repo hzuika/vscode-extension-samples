@@ -16,16 +16,16 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-	// The server is implemented in node
+	// サーバーは node で実装されている．
 	const serverModule = context.asAbsolutePath(
 		path.join('server', 'out', 'server.js')
 	);
-	// The debug options for the server
-	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
+	// サーバー用のデバッグオプション．
+	// --inspect=6009: Node インスペクターモードのサーバーを実行して，VS Code はサーバーにアタッチしてデバッグできる．
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
-	// If the extension is launched in debug mode then the debug server options are used
-	// Otherwise the run options are used
+	// 拡張機能がデバッグモードで起動されたら， `debug` オプションが使用される．
+	// そうでなければ `run` オプションが使用される．
 	const serverOptions: ServerOptions = {
 		run: { module: serverModule, transport: TransportKind.ipc },
 		debug: {
@@ -35,17 +35,17 @@ export function activate(context: ExtensionContext) {
 		}
 	};
 
-	// Options to control the language client
+	// Language Client の制御オプション．
 	const clientOptions: LanguageClientOptions = {
-		// Register the server for plain text documents
+		// プレインテキストドキュメントに対してサーバーを登録する．
 		documentSelector: [{ scheme: 'file', language: 'plaintext' }],
 		synchronize: {
-			// Notify the server about file changes to '.clientrc files contained in the workspace
+			// ワークスペースに含まれる `.clientrc` ファイルの変更をサーバーに通知する．
 			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 		}
 	};
 
-	// Create the language client and start the client.
+	// Language Client を作成して起動する．
 	client = new LanguageClient(
 		'languageServerExample',
 		'Language Server Example',
@@ -53,7 +53,7 @@ export function activate(context: ExtensionContext) {
 		clientOptions
 	);
 
-	// Start the client. This will also launch the server
+	// Language Client を起動する．サーバーも同時に起動する．
 	client.start();
 }
 
